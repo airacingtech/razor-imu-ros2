@@ -17,29 +17,27 @@ endif()
 
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
-find_package(ament_cmake_auto REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(serial_driver REQUIRED)
+ament_auto_find_build_dependencies()
 
-add_executable(razor_imu_node src/razor_imu_node.cpp)
-target_include_directories(razor_imu_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(
-  razor_imu_node
-  "ament_cmake_auto"
-  "sensor_msgs"
-  "rclcpp"
-  "rclcpp_components"
-  "tf2_ros"
-  "serial_driver"
+set(RAZOR_IMU_ROS2_LIB_SRC
+  src/razor_imu_node.cpp
 )
 
-install(TARGETS razor_imu_node
-  DESTINATION lib/${PROJECT_NAME})
+set(RAZOR_IMU_ROS2_LIB_HEADERS
+  include/razor_imu_ros2/razor_imu_node.hpp
+)
+
+# generate library
+ament_auto_add_library(${PROJECT_NAME} SHARED
+  ${RAZOR_IMU_ROS2_LIB_SRC}
+  ${RAZOR_IMU_ROS2_LIB_HEADERS}
+)
+
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN "razor_imu_ros2::RazorImuNode"
+  EXECUTABLE ${PROJECT_NAME}_exe
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -52,4 +50,8 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_package()
+ament_auto_package(INSTALL_TO_SHARE
+  launch
+  param
+)
+
