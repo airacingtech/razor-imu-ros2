@@ -1,10 +1,27 @@
-#include <cstdio>
+// Copyright AI Racing Tech 2022
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-int main(int argc, char ** argv)
+#include "razor_imu_ros2/razor_imu_node.hpp"
+
+namespace razor_imu_ros2
 {
-  (void) argc;
-  (void) argv;
+RazorImuNode::RazorImuNode(const rclcpp::NodeOptions & options)
+: rclcpp::Node("razor_imu_node", options)
+{
 
-  printf("hello world razor_imu_ros2 package\n");
-  return 0;
 }
+}  // namespace razor_imu_ros2
+
+#include "rclcpp_components/register_node_macro.hpp"
+RCLCPP_COMPONENTS_REGISTER_NODE(razor_imu_ros2::RazorImuNode)
