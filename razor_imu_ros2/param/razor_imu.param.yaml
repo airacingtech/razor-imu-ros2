@@ -1,0 +1,64 @@
+/**:
+  ros__parameters:
+    frame_id: imu
+
+    # Configure offset of IMU with respect to REP 103 configuration
+    enable_offset: false
+    roll_offset_deg: 0.0
+    pitch_offset_deg: 0.0
+    yaw_offset_deg: 0.0
+
+    # Counter gravity on Z axis
+    zero_gravity: false
+
+    ##### Calibration ####
+    ### accelerometer
+    accel_x_min: -250.0
+    accel_x_max: 250.0
+    accel_y_min: -250.0
+    accel_y_max: 250.0
+    accel_z_min: -250.0
+    accel_z_max: 250.0
+
+    ### magnetometer
+    # standard calibration
+    magn_x_min: -600.0
+    magn_x_max: 600.0
+    magn_y_min: -600.0
+    magn_y_max: 600.0
+    magn_z_min: -600.0
+    magn_z_max: 600.0
+
+    # extended calibration
+    calibration_magn_use_extended: false
+    magn_ellipsoid_center: [0.0, 0.0, 0.0]
+    magn_ellipsoid_transform: [0.0, 0.0, 0.0,
+                               0.0, 0.0, 0.0,
+                               0.0, 0.0, 0.0]
+
+    ### gyroscope
+    gyro_average_offset_x: 0.0
+    gyro_average_offset_y: 0.0
+    gyro_average_offset_z: 0.0
+
+    # Orientation covariance estimation:
+    # Observed orientation noise: 0.3 degrees in x, y, 0.6 degrees in z
+    # Magnetometer linearity: 0.1% of full scale (+/- 2 gauss) => 4 milligauss
+    # Earth's magnetic field strength is ~0.5 gauss, so magnetometer nonlinearity could
+    # cause ~0.8% yaw error (4mgauss/0.5 gauss = 0.008) => 2.8 degrees, or 0.050 radians
+    # i.e. variance in yaw: 0.0025
+    # Accelerometer non-linearity: 0.2% of 4G => 0.008G. This could cause
+    # static roll/pitch error of 0.8%, owing to gravity orientation sensing
+    # error => 2.8 degrees, or 0.05 radians. i.e. variance in roll/pitch: 0.0025
+    # so set all covariances the same.
+    orientation_covariance: [0.0025 , 0.0 , 0.0,
+                             0.0, 0.0025, 0.0,
+                             0.0, 0.0, 0.0025]
+
+    # Angular velocity covariance estimation:
+    # Observed gyro noise: 4 counts => 0.28 degrees/sec
+    # nonlinearity spec: 0.2% of full scale => 8 degrees/sec = 0.14 rad/sec
+    # Choosing the larger (0.14) as std dev, variance = 0.14^2 ~= 0.02
+    angular_velocity_covariance: [0.02, 0.0 , 0.0,
+                                  0.0 , 0.02, 0.0,
+                                  0.0 , 0.0 , 0.02]

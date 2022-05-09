@@ -15,7 +15,16 @@
 #ifndef RAZOR_IMU_ROS2__RAZOR_IMU_NODE_HPP_
 #define RAZOR_IMU_ROS2__RAZOR_IMU_NODE_HPP_
 
-#include <rclcpp/rclcpp.hpp>
+#include <thread>
+#include <memory>
+
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/imu.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+#include "serial_driver/serial_driver.hpp"
+
+using Imu = sensor_msgs::msg::Imu;
+using std::placeholders::_1;
 
 namespace razor_imu_ros2
 {
@@ -23,6 +32,20 @@ class RazorImuNode : public rclcpp::Node
 {
 public:
   explicit RazorImuNode(const rclcpp::NodeOptions & options);
+
+protected:
+  void loop_thread();
+
+  rclcpp::Publisher<Imu>::SharedPtr m_imu_pub_ {};
+  std::unique_ptr<std::thread> m_loop_thread_ {};
+  Imu m_imu_ {};
+  bool m_enable_offset_;
+  bool m_zero_gravity_;
+  tf2::Quaternion m_q_offset_;
+
+// Serial Driver
+  std::unique_ptr<drivers::common::IoContext> owned_ctx {};
+  std::unique_ptr<drivers::serial_driver::SerialDriver> driver_ {};
 };
 }  // namespace razor_imu_ros2
 
