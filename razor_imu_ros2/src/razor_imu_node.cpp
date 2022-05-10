@@ -194,7 +194,7 @@ void RazorImuNode::loop_thread()
       ss >> yrp[1];
       ss >> yrp[2];
       tf2::Quaternion q;
-      q.setRPY(yrp[1] * DEG2RAD, yrp[2] * DEG2RAD, -yrp[0] * DEG2RAD);
+      q.setRPY(yrp[1] * DEG2RAD, (180.0 + yrp[2]) * DEG2RAD, -yrp[0] * DEG2RAD);
       if (m_enable_offset_) {
         q = (m_q_offset_ * q).normalize();
       }
@@ -203,8 +203,8 @@ void RazorImuNode::loop_thread()
       ss >> msg.linear_acceleration.y;
       ss >> msg.linear_acceleration.x;
       ss >> msg.linear_acceleration.z;
-      msg.linear_acceleration.x *= ACCEL_FACTOR * -1.0;
-      msg.linear_acceleration.y *= ACCEL_FACTOR;
+      msg.linear_acceleration.x *= ACCEL_FACTOR;
+      msg.linear_acceleration.y *= ACCEL_FACTOR * -1.0;
       msg.linear_acceleration.z *= ACCEL_FACTOR;
       tf2::Vector3 v_l;
       fromMsg(msg.linear_acceleration, v_l);
@@ -212,7 +212,7 @@ void RazorImuNode::loop_thread()
       ss >> msg.angular_velocity.y;
       ss >> msg.angular_velocity.x;
       ss >> msg.angular_velocity.z;
-      msg.angular_velocity.x *= -1.0;
+      msg.angular_velocity.y *= -1.0;
       tf2::Vector3 v_a;
       fromMsg(msg.angular_velocity, v_a);
       if (m_enable_offset_) {
