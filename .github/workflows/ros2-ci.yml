@@ -5,7 +5,7 @@ jobs:
   build-ros2:
     runs-on: ubuntu-latest
     container:
-      image: ros:foxy
+      image: ros:galactic
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
