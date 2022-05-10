@@ -189,19 +189,19 @@ void RazorImuNode::loop_thread()
       Imu msg = m_imu_;
       msg.header.stamp = now();
 
-      double ypr[3] = {0.0, 0.0, 0.0};
-      ss >> ypr[0];
-      ss >> ypr[1];
-      ss >> ypr[2];
+      double yrp[3] = {0.0, 0.0, 0.0};
+      ss >> yrp[0];
+      ss >> yrp[1];
+      ss >> yrp[2];
       tf2::Quaternion q;
-      q.setRPY(-ypr[2] * DEG2RAD, -ypr[1] * DEG2RAD, ypr[0] * DEG2RAD);
+      q.setRPY(yrp[1] * DEG2RAD, yrp[2] * DEG2RAD, -yrp[0] * DEG2RAD);
       if (m_enable_offset_) {
         q = (m_q_offset_ * q).normalize();
       }
       msg.orientation = tf2::toMsg(q);
 
-      ss >> msg.linear_acceleration.x;
       ss >> msg.linear_acceleration.y;
+      ss >> msg.linear_acceleration.x;
       ss >> msg.linear_acceleration.z;
       msg.linear_acceleration.x *= ACCEL_FACTOR * -1.0;
       msg.linear_acceleration.y *= ACCEL_FACTOR;
@@ -209,11 +209,10 @@ void RazorImuNode::loop_thread()
       tf2::Vector3 v_l;
       fromMsg(msg.linear_acceleration, v_l);
 
-      ss >> msg.angular_velocity.x;
       ss >> msg.angular_velocity.y;
+      ss >> msg.angular_velocity.x;
       ss >> msg.angular_velocity.z;
-      msg.angular_velocity.y *= -1.0;
-      msg.angular_velocity.z *= -1.0;
+      msg.angular_velocity.x *= -1.0;
       tf2::Vector3 v_a;
       fromMsg(msg.angular_velocity, v_a);
       if (m_enable_offset_) {

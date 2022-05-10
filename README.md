@@ -6,6 +6,20 @@ ROS2 Driver for Razor IMU (Sparkfun Artemis), a C++ port of the [ROS1 Python Dri
 
 Please see the ROS1 driver for details about IMU firmware and calibration process.
 
+## Mounting the IMU
+
+Have the XYZ axis symbols aligned with [REP 103](https://www.ros.org/reps/rep-0103.html). If you are using a Sparkfun OpenLog Artemis, This means the Type-C port is on the right of your robot, and the SD card slot faces down.
+
+# Updating Udev Rules
+
+For your convenience, you can create a `/etc/udev/rules.d/99-razor.rules`:
+
+```bash
+KERNEL=="ttyUSB[0-9]*", ACTION=="add", ATTRS{idVendor}=="1a86", MODE="0666", GROUP="dialout", SYMLINK+="sensors/razor"
+```
+
+This mounts your IMU to `/dev/sensors/razor`. Re-plug in your IMU to take effect. 
+
 ## Building
 
 ```bash
