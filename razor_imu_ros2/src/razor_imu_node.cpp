@@ -213,6 +213,7 @@ void RazorImuNode::loop_thread()
       ss >> msg.angular_velocity.x;
       ss >> msg.angular_velocity.z;
       msg.angular_velocity.y *= -1.0;
+      msg.angular_velocity.z *= -1.0;
       tf2::Vector3 v_a;
       fromMsg(msg.angular_velocity, v_a);
       if (m_enable_offset_) {
