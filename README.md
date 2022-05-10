@@ -4,7 +4,7 @@ ROS2 Driver for Razor IMU (Sparkfun Artemis), a C++ port of the [ROS1 Python Dri
 
 Please see the ROS1 driver for details about IMU firmware and calibration process.
 
-# Building
+## Building
 
 ```bash
 git clone https://github.com/airacingtech/razor-imu-ros2.git
