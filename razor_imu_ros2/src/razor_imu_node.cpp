@@ -34,14 +34,14 @@ void RazorImuNode::command(
   const std::string & command, const double & val,
   const uint32_t & delay_ms = 1000)
 {
-  RCLCPP_INFO(get_logger(), command + std::to_string(val));
+  RCLCPP_INFO(get_logger(), (command + std::to_string(val)).c_str());
   driver_->port()->async_send(str_to_bytes(command + std::to_string(val) + '\r'));
   sleep(delay_ms / 1000.0);
 }
 
 void RazorImuNode::command(const std::string & command, const uint32_t & delay_ms = 1000)
 {
-  RCLCPP_INFO(get_logger(), command);
+  RCLCPP_INFO(get_logger(), command.c_str());
   driver_->port()->async_send(str_to_bytes(command + '\r'));
   sleep(delay_ms / 1000.0);
 }
