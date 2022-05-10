@@ -53,7 +53,6 @@ rclcpp_components_register_node(${PROJECT_NAME}
   EXECUTABLE ${PROJECT_NAME}_exe
 )
 
-
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -69,4 +68,3 @@ ament_auto_package(INSTALL_TO_SHARE
   launch
   param
 )
-

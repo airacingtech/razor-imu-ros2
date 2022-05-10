@@ -1,5 +1,7 @@
 /**:
   ros__parameters:
+    serial_port: "/dev/sensors/razor"
+    baud_rate: 57600
     frame_id: imu
 
     # Configure offset of IMU with respect to REP 103 configuration
@@ -12,6 +14,8 @@
     zero_gravity: false
 
     ##### Calibration ####
+    # No need to send calibration if they are flashed into firmware already
+    send_calibration: false 
     ### accelerometer
     accel_x_min: -250.0
     accel_x_max: 250.0

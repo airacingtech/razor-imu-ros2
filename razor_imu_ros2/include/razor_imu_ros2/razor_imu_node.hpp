@@ -1,10 +1,10 @@
-// Copyright AI Racing Tech 2022
+// Copyright 2022 AI Racing Tech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 
 #include <thread>
 #include <memory>
+#include <string>
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
@@ -35,6 +36,8 @@ public:
 
 protected:
   void loop_thread();
+  void command(const std::string & command, const double & val, const uint32_t & delay_ms);
+  void command(const std::string & command, const uint32_t & delay_ms);
 
   rclcpp::Publisher<Imu>::SharedPtr m_imu_pub_ {};
   std::unique_ptr<std::thread> m_loop_thread_ {};
