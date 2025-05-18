@@ -32,8 +32,6 @@ colcon build
 
 ## ROS Distro Support
 
-The latest branch is `foxy` which would also build in Galactic with warnings.
-
-Accepting PR that updates `declare_parameter` with Galactic practices and removes the TODOs in the code about TF2.
+The latest branch is `iron` which would also build in Galactic with warnings.
 
 Accepting PR that fixes bugs or adds tests.
