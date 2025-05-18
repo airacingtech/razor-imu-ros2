@@ -4,7 +4,7 @@
   <name>razor_imu_ros2</name>
   <version>1.0.0</version>
   <description>ROS2 Razor IMU Driver</description>
-  <maintainer email="haoru.xue@autoware.org">Haoru Xue</maintainer>
+  <maintainer email="winston.h.chou@gmail.com">Winston Chou</maintainer>
   <license>Apache2.0</license>
 
   <depend>ament_cmake_auto</depend>
@@ -15,6 +15,7 @@
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>serial_driver</depend>
+  <depend>asio_cmake_module</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

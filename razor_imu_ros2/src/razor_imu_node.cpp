@@ -20,8 +20,6 @@
 #include <regex>
 
 #include "razor_imu_ros2/razor_imu_node.hpp"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
-#include "geometry_msgs/msg/vector3.hpp"
 
 namespace razor_imu_ros2
 {
@@ -48,48 +46,79 @@ void RazorImuNode::command(const std::string & command, const uint32_t & delay_m
 
 // Unfortunately conversion to Vector3 is not availble in Foxy
 // TODO(haoru): use tf2::toMsg in Galactic onwards
-geometry_msgs::msg::Vector3 toMsg(const tf2::Vector3 & in)
-{
-  geometry_msgs::msg::Vector3 out;
-  out.x = in.getX();
-  out.y = in.getY();
-  out.z = in.getZ();
-  return out;
-}
+// geometry_msgs::msg::Vector3 toMsg(const tf2::Vector3 & in)
+// {
+//   geometry_msgs::msg::Vector3 out;
+//   out.x = in.getX();
+//   out.y = in.getY();
+//   out.z = in.getZ();
+//   return out;
+// }
 
 // ROS2 Foxy TF2 just doesn't work 99% of the time
 // TODO(haoru): use tf2::fromMsg in Galactic onwards
-void fromMsg(const geometry_msgs::msg::Vector3 & in, tf2::Vector3 & out)
-{
-  out = tf2::Vector3(in.x, in.y, in.z);
-}
+// void fromMsg(const geometry_msgs::msg::Vector3 & in, tf2::Vector3 & out)
+// {
+//   out = tf2::Vector3(in.x, in.y, in.z);
+// }
 
 RazorImuNode::RazorImuNode(const rclcpp::NodeOptions & options)
 : rclcpp::Node("razor_imu_node", options),
   owned_ctx{new drivers::common::IoContext(2)},
   driver_{new drivers::serial_driver::SerialDriver(*owned_ctx)}
 {
+  // Declare parameters
+  declare_parameter("frame_id", "imu");
+  declare_parameter("angular_velocity_covariance", std::vector<double>{});
+  declare_parameter("orientation_covariance", std::vector<double>{});
+  declare_parameter<bool>("enable_offset");
+  declare_parameter<double>("roll_offset_deg");
+  declare_parameter<double>("pitch_offset_deg");
+  declare_parameter<double>("yaw_offset_deg");
+  declare_parameter<bool>("zero_gravity");
+  declare_parameter<std::string>("serial_port", "/dev/sensors/razor");
+  declare_parameter<int>("baud_rate", 115200);
+  declare_parameter<bool>("send_calibration");
+  declare_parameter<double>("accel_x_min");
+  declare_parameter<double>("accel_x_max");
+  declare_parameter<double>("accel_y_min");
+  declare_parameter<double>("accel_y_max");
+  declare_parameter<double>("accel_z_min");
+  declare_parameter<double>("accel_z_max");
+  declare_parameter<double>("magn_x_min");
+  declare_parameter<double>("magn_x_max");
+  declare_parameter<double>("magn_y_min");
+  declare_parameter<double>("magn_y_max");
+  declare_parameter<double>("magn_z_min");
+  declare_parameter<double>("magn_z_max");
+  declare_parameter<bool>("calibration_magn_use_extended");
+  declare_parameter<std::vector<double>>("magn_ellipsoid_center", std::vector<double>{});
+  declare_parameter<std::vector<double>>("magn_ellipsoid_transform", std::vector<double>{});
+  declare_parameter<double>("gyro_average_offset_x");
+  declare_parameter<double>("gyro_average_offset_y");
+  declare_parameter<double>("gyro_average_offset_z");
+
   // Create pub
   m_imu_pub_ = create_publisher<Imu>("imu", rclcpp::QoS{10});
-  m_imu_.header.frame_id = declare_parameter("frame_id", "imu");
-  const auto avc = declare_parameter("angular_velocity_covariance", std::vector<double>{});
+  m_imu_.header.frame_id = get_parameter("frame_id").as_string();
+  const auto avc = get_parameter("angular_velocity_covariance").as_double_array();
   std::copy(avc.begin(), avc.end(), m_imu_.angular_velocity_covariance.begin());
-  const auto oc = declare_parameter("orientation_covariance", std::vector<double>{});
+  const auto oc = get_parameter("orientation_covariance").as_double_array();
   std::copy(oc.begin(), oc.end(), m_imu_.orientation_covariance.begin());
-  m_enable_offset_ = declare_parameter("enable_offset").get<bool>();
+  m_enable_offset_ = get_parameter("enable_offset").as_bool();
   double rpy_offset[3] {0.0, 0.0, 0.0};
   if (m_enable_offset_) {
     static constexpr double DEG2RAD = M_PI / 180.0;
-    rpy_offset[0] = declare_parameter("roll_offset_deg").get<double>() * DEG2RAD;
-    rpy_offset[1] = declare_parameter("pitch_offset_deg").get<double>() * DEG2RAD;
-    rpy_offset[2] = declare_parameter("yaw_offset_deg").get<double>() * DEG2RAD;
+    rpy_offset[0] = get_parameter("roll_offset_deg").as_double() * DEG2RAD;
+    rpy_offset[1] = get_parameter("pitch_offset_deg").as_double() * DEG2RAD;
+    rpy_offset[2] = get_parameter("yaw_offset_deg").as_double() * DEG2RAD;
     m_q_offset_.setRPY(rpy_offset[0], rpy_offset[1], rpy_offset[2]);
   }
-  m_zero_gravity_ = declare_parameter("zero_gravity").get<bool>();
+  m_zero_gravity_ = get_parameter("zero_gravity").as_bool();
 
   // Open serial port
-  const std::string serial_port = declare_parameter("serial_port").get<std::string>();
-  const uint32_t baud_rate = declare_parameter("baud_rate").get<uint32_t>();
+  const std::string serial_port = get_parameter("serial_port").as_string();
+  const uint32_t baud_rate = static_cast<uint32_t>(get_parameter("baud_rate").as_int());
   const auto fc = drivers::serial_driver::FlowControl::NONE;
   const auto pt = drivers::serial_driver::Parity::NONE;
   const auto sb = drivers::serial_driver::StopBits::ONE;
@@ -105,26 +134,24 @@ RazorImuNode::RazorImuNode(const rclcpp::NodeOptions & options)
   // Set output mode RPYAG
   command("#ox");
 
-  if (declare_parameter("send_calibration").get<bool>()) {
+  if (get_parameter("send_calibration").as_bool()) {
     // Set accel calibrations
-    command("#caxm", declare_parameter("accel_x_min").get<double>());
-    command("#caxM", declare_parameter("accel_x_max").get<double>());
-    command("#caym", declare_parameter("accel_y_min").get<double>());
-    command("#cayM", declare_parameter("accel_y_max").get<double>());
-    command("#cazm", declare_parameter("accel_z_min").get<double>());
-    command("#cazM", declare_parameter("accel_z_max").get<double>());
+    command("#caxm", get_parameter("accel_x_min").as_double());
+    command("#caxM", get_parameter("accel_x_max").as_double());
+    command("#caym", get_parameter("accel_y_min").as_double());
+    command("#cayM", get_parameter("accel_y_max").as_double());
+    command("#cazm", get_parameter("accel_z_min").as_double());
+    command("#cazM", get_parameter("accel_z_max").as_double());
 
     // Set manetometer calibrations
-    if (declare_parameter("calibration_magn_use_extended").get<bool>()) {
-      const auto magn_ellipsoid_center = declare_parameter(
-        "magn_ellipsoid_center",
-        std::vector<double>{});
+    if (get_parameter("calibration_magn_use_extended").as_bool()) {
+      const auto magn_ellipsoid_center = get_parameter(
+        "magn_ellipsoid_center").as_double_array();
       command("#ccx", magn_ellipsoid_center[0]);
       command("#ccy", magn_ellipsoid_center[1]);
       command("#ccz", magn_ellipsoid_center[2]);
-      const auto magn_ellipsoid_transform = declare_parameter(
-        "magn_ellipsoid_transform",
-        std::vector<double>{});
+      const auto magn_ellipsoid_transform = get_parameter(
+        "magn_ellipsoid_transform").as_double_array();
       command("#ctxX", magn_ellipsoid_transform[0]);
       command("#ctxY", magn_ellipsoid_transform[1]);
       command("#ctxZ", magn_ellipsoid_transform[2]);
@@ -135,18 +162,18 @@ RazorImuNode::RazorImuNode(const rclcpp::NodeOptions & options)
       command("#ctzY", magn_ellipsoid_transform[7]);
       command("#ctzZ", magn_ellipsoid_transform[8]);
     } else {
-      command("#cmxm", declare_parameter("magn_x_min").get<double>());
-      command("#cmxM", declare_parameter("magn_x_max").get<double>());
-      command("#cmym", declare_parameter("magn_y_min").get<double>());
-      command("#cmyM", declare_parameter("magn_y_max").get<double>());
-      command("#cmzm", declare_parameter("magn_z_min").get<double>());
-      command("#cmzM", declare_parameter("magn_z_max").get<double>());
+      command("#cmxm", get_parameter("magn_x_min").as_double());
+      command("#cmxM", get_parameter("magn_x_max").as_double());
+      command("#cmym", get_parameter("magn_y_min").as_double());
+      command("#cmyM", get_parameter("magn_y_max").as_double());
+      command("#cmzm", get_parameter("magn_z_min").as_double());
+      command("#cmzM", get_parameter("magn_z_max").as_double());
     }
 
     // Set gyro calibrations
-    command("#cgx", declare_parameter("gyro_average_offset_x").get<double>());
-    command("#cgy", declare_parameter("gyro_average_offset_y").get<double>());
-    command("#cgz", declare_parameter("gyro_average_offset_z").get<double>());
+    command("#cgx", get_parameter("gyro_average_offset_x").as_double());
+    command("#cgy", get_parameter("gyro_average_offset_y").as_double());
+    command("#cgz", get_parameter("gyro_average_offset_z").as_double());
   }
   // Start outputing
   command("#o1");
@@ -207,7 +234,7 @@ void RazorImuNode::loop_thread()
       msg.linear_acceleration.y *= ACCEL_FACTOR * -1.0;
       msg.linear_acceleration.z *= ACCEL_FACTOR;
       tf2::Vector3 v_l;
-      fromMsg(msg.linear_acceleration, v_l);
+      tf2::fromMsg(msg.linear_acceleration, v_l);
 
       ss >> msg.angular_velocity.y;
       ss >> msg.angular_velocity.x;
@@ -215,10 +242,10 @@ void RazorImuNode::loop_thread()
       msg.angular_velocity.y *= -1.0;
       msg.angular_velocity.z *= -1.0;
       tf2::Vector3 v_a;
-      fromMsg(msg.angular_velocity, v_a);
+      tf2::fromMsg(msg.angular_velocity, v_a);
       if (m_enable_offset_) {
-        msg.linear_acceleration = toMsg(tf2::quatRotate(m_q_offset_, v_l));
-        msg.angular_velocity = toMsg(tf2::quatRotate(m_q_offset_, v_a));
+        msg.linear_acceleration = tf2::toMsg(tf2::quatRotate(m_q_offset_, v_l));
+        msg.angular_velocity = tf2::toMsg(tf2::quatRotate(m_q_offset_, v_a));
       }
 
       if (m_zero_gravity_) {

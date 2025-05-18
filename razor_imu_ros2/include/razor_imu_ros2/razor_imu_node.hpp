@@ -22,6 +22,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "tf2/LinearMath/Quaternion.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
 #include "serial_driver/serial_driver.hpp"
 
 using Imu = sensor_msgs::msg::Imu;
